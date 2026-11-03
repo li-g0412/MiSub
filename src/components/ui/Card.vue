@@ -13,6 +13,7 @@
             type: Object,
             required: true,
         },
+        viewMode: { type: String, default: 'card' },
     });
 
     const emit = defineEmits([
@@ -186,14 +187,27 @@
 
 <template>
     <div
-        class="group relative flex h-full min-h-[200px] flex-col overflow-hidden rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary-500/5 dark:border-white/10 dark:bg-gray-900/70"
-        :class="{
-            'opacity-75 grayscale-[0.8]': !misub.enabled,
-        }"
+        class="group relative flex overflow-hidden border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary-500/5 dark:border-white/10 dark:bg-gray-900/70"
+        :class="[
+            viewMode === 'list'
+                ? 'min-h-0 flex-col rounded-lg p-3'
+                : 'h-full min-h-[200px] flex-col rounded-xl p-5',
+            { 'opacity-75 grayscale-[0.8]': !misub.enabled },
+        ]"
     >
-        <div class="relative z-10 flex flex-col h-full">
+        <div
+            class="relative z-10 min-w-0"
+            :class="
+                viewMode === 'list'
+                    ? 'grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1.3fr)_minmax(130px,0.8fr)_auto] md:gap-4'
+                    : 'flex h-full flex-col'
+            "
+        >
             <!-- Header -->
-            <div class="flex items-start justify-between gap-3 mb-4">
+            <div
+                class="flex min-w-0 items-start justify-between gap-3"
+                :class="viewMode === 'list' ? 'col-span-full mb-0 md:col-span-1' : 'mb-4'"
+            >
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 mb-1.5">
                         <span
@@ -292,6 +306,7 @@
                     <button
                         @click.stop="emit('preview')"
                         class="p-2.5 rounded-full hover:bg-primary-50 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 flex items-center justify-center"
+                        :class="viewMode === 'list' ? 'md:min-w-0 md:min-h-0 md:p-1.5' : ''"
                         :title="t('actions.previewNodes')"
                         :aria-label="t('actions.previewNodes')"
                     >
@@ -318,6 +333,7 @@
                     <button
                         @click.stop="emit('qrcode')"
                         class="p-2.5 rounded-full hover:bg-primary-50 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 flex items-center justify-center"
+                        :class="viewMode === 'list' ? 'md:min-w-0 md:min-h-0 md:p-1.5' : ''"
                         :title="t('actions.showQrCode')"
                         :aria-label="t('actions.showQrCode')"
                     >
@@ -344,6 +360,7 @@
                     <button
                         @click.stop="emit('edit')"
                         class="p-2.5 rounded-full hover:bg-primary-50 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-primary-500 transition-colors min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 flex items-center justify-center"
+                        :class="viewMode === 'list' ? 'md:min-w-0 md:min-h-0 md:p-1.5' : ''"
                         :title="t('actions.edit')"
                         :aria-label="t('actions.edit')"
                     >
@@ -365,6 +382,7 @@
                     <button
                         @click.stop="emit('delete')"
                         class="p-2.5 rounded-full hover:bg-red-50 dark:hover:bg-red-500/20 text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 flex items-center justify-center"
+                        :class="viewMode === 'list' ? 'md:min-w-0 md:min-h-0 md:p-1.5' : ''"
                         :title="t('actions.delete')"
                         :aria-label="t('actions.delete')"
                     >
@@ -387,7 +405,10 @@
             </div>
 
             <!-- URL Display -->
-            <div class="relative mb-4">
+            <div
+                class="relative min-w-0"
+                :class="viewMode === 'list' ? 'col-span-full mb-0 md:col-span-1' : 'mb-4'"
+            >
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg
                         class="h-3.5 w-3.5 text-gray-500 dark:text-gray-400"
@@ -413,7 +434,8 @@
             </div>
 
             <div
-                class="grid gap-3 rounded-lg border border-gray-100 bg-gray-50/80 p-3 dark:border-white/10 dark:bg-white/5"
+                class="grid gap-3 rounded-lg border border-gray-100 bg-gray-50/80 dark:border-white/10 dark:bg-white/5"
+                :class="viewMode === 'list' ? 'gap-2 p-2' : 'p-3'"
             >
                 <div v-if="trafficInfo" class="space-y-2">
                     <div class="flex items-end justify-between text-xs">
@@ -455,7 +477,12 @@
 
             <!-- Footer Actions -->
             <div
-                class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-white/10"
+                class="flex items-center justify-between"
+                :class="
+                    viewMode === 'list'
+                        ? 'mt-0 border-0 pt-0'
+                        : 'mt-4 border-t border-gray-100 pt-3 dark:border-white/10'
+                "
             >
                 <Switch v-model="misub.enabled" @change="emit('change')" />
 
@@ -496,7 +523,8 @@
             <div
                 v-if="hasFooterMeta"
                 data-testid="subscription-footer-meta"
-                class="mt-3 flex items-center gap-1 truncate text-[10px] text-gray-500 dark:text-gray-400"
+                class="flex min-w-0 items-center gap-1 truncate text-[10px] text-gray-500 dark:text-gray-400"
+                :class="viewMode === 'list' ? 'col-span-full mt-0' : 'mt-3'"
             >
                 <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path

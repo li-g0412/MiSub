@@ -23,8 +23,9 @@ function mountPanel(props = {}) {
             plugins: [createPinia(), createI18n({ initialLocale: 'zh-CN' })],
             stubs: {
                 Card: {
-                    props: ['misub'],
-                    template: '<article class="card-stub">{{ misub.name }}</article>',
+                    props: ['misub', 'viewMode'],
+                    template:
+                        '<article class="card-stub" :data-view-mode="viewMode">{{ misub.name }}</article>',
                 },
                 PanelPagination: true,
                 EmptyState: {
@@ -44,6 +45,29 @@ function mountPanel(props = {}) {
 }
 
 describe('SubscriptionPanel UX', () => {
+    it('toggles between card and list modes and passes the selected mode to subscriptions', async () => {
+        const subscription = {
+            id: 's1',
+            name: '主力机场',
+            url: 'https://example.com/a',
+        };
+        const wrapper = mountPanel({
+            viewMode: 'card',
+            subscriptions: [subscription],
+            paginatedSubscriptions: [subscription],
+        });
+
+        expect(wrapper.get('[data-view-mode="card"]').attributes('aria-pressed')).toBe('true');
+        expect(wrapper.get('.card-stub').attributes('data-view-mode')).toBe('card');
+
+        await wrapper.get('[data-view-mode="list"]').trigger('click');
+        expect(wrapper.emitted('update:viewMode')).toEqual([['list']]);
+
+        await wrapper.setProps({ viewMode: 'list' });
+        expect(wrapper.get('[data-view-mode="list"]').attributes('aria-pressed')).toBe('true');
+        expect(wrapper.get('.card-stub').attributes('data-view-mode')).toBe('list');
+    });
+
     it('keeps the panel header focused on local actions instead of duplicating dashboard statistics', () => {
         const nowSeconds = Math.floor(Date.now() / 1000);
         const wrapper = mountPanel({
@@ -167,12 +191,16 @@ describe('SubscriptionPanel UX', () => {
             Array.from(document.body.querySelectorAll('[role="dialog"] button')).map(
                 (el) => new DOMWrapper(el)
             );
-        await dialogButtons().find((button) => button.text() === '取消').trigger('click');
+        await dialogButtons()
+            .find((button) => button.text() === '取消')
+            .trigger('click');
         expect(wrapper.emitted('assign-airport-group')).toBeUndefined();
 
         await wrapper.get('button[title="指定机场分组"]').trigger('click');
         await new DOMWrapper(document.body.querySelector('[role="dialog"] select')).setValue('g1');
-        await dialogButtons().find((button) => button.text() === '保存机场归属').trigger('click');
+        await dialogButtons()
+            .find((button) => button.text() === '保存机场归属')
+            .trigger('click');
         expect(wrapper.emitted('assign-airport-group')).toEqual([
             [['s1', 's2'], { groupId: 'g1', name: 'Existing' }],
         ]);

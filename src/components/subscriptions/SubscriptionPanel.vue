@@ -6,7 +6,6 @@
     import PanelPagination from '@/components/shared/PanelPagination.vue';
     import EmptyState from '@/components/ui/EmptyState.vue';
     import Modal from '@/components/forms/Modal.vue';
-    import { useUIStore } from '@/stores/ui';
     import { useI18n } from '@/i18n/index.js';
     import { inferAirportRootDomain } from '../../utils/airport-domain.js';
     import { lookupDomainName } from '../../utils/domain-name-memory.js';
@@ -16,7 +15,6 @@
         createAirportGroupId,
     } from '../../utils/airport-identity.js';
 
-    const { layoutMode } = useUIStore();
     const { t } = useI18n();
 
     const props = defineProps({
@@ -33,6 +31,7 @@
         lastRefreshAt: { type: [String, Number, Date], default: null },
         statusFilter: { type: String, default: '' },
         statusFilterLabel: { type: String, default: '' },
+        viewMode: { type: String, default: 'card' },
     });
 
     const groupNameInput = ref('');
@@ -60,6 +59,7 @@
         'assign-airport-group',
         'split-airport-group',
         'clearStatusFilter',
+        'update:viewMode',
     ]);
 
     const searchModel = computed({
@@ -361,6 +361,63 @@
                 <div
                     class="flex flex-wrap items-center gap-2 sm:w-auto justify-end sm:justify-start"
                 >
+                    <div
+                        data-testid="subscription-view-mode-toggle"
+                        class="flex shrink-0 items-center rounded-md bg-gray-200 p-0.5 dark:bg-gray-700"
+                    >
+                        <button
+                            type="button"
+                            data-view-mode="card"
+                            class="flex h-8 w-8 items-center justify-center rounded-sm transition-colors"
+                            :class="
+                                viewMode === 'card'
+                                    ? 'bg-white text-indigo-600 shadow-sm dark:bg-gray-900'
+                                    : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'
+                            "
+                            :aria-label="t('common.cardView')"
+                            :aria-pressed="viewMode === 'card'"
+                            :title="t('common.cardView')"
+                            @click="emit('update:viewMode', 'card')"
+                        >
+                            <svg
+                                class="h-5 w-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                                />
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            data-view-mode="list"
+                            class="flex h-8 w-8 items-center justify-center rounded-sm transition-colors"
+                            :class="
+                                viewMode === 'list'
+                                    ? 'bg-white text-indigo-600 shadow-sm dark:bg-gray-900'
+                                    : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'
+                            "
+                            :aria-label="t('common.listView')"
+                            :aria-pressed="viewMode === 'list'"
+                            :title="t('common.listView')"
+                            @click="emit('update:viewMode', 'list')"
+                        >
+                            <svg
+                                class="h-5 w-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                    </div>
                     <button
                         v-if="subscriptions.length > 1"
                         type="button"
@@ -478,7 +535,9 @@
             </div>
         </div>
         <div v-if="subscriptions.length > 0 && isSorting">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div
+                :class="viewMode === 'card' ? 'grid grid-cols-1 gap-4 md:grid-cols-2' : 'space-y-3'"
+            >
                 <draggable
                     tag="div"
                     class="contents"
@@ -491,6 +550,7 @@
                         <div class="cursor-move">
                             <Card
                                 :misub="subscription"
+                                :view-mode="viewMode"
                                 @delete="handleDelete(subscription.id)"
                                 @change="handleSortEnd"
                                 @update="handleUpdate(subscription.id)"
@@ -595,7 +655,12 @@
                         </div>
                         <div
                             v-show="!isGroupCollapsed(group.key)"
-                            class="grid grid-cols-1 gap-4 border-t border-gray-100/80 p-4 md:grid-cols-2 dark:border-white/10"
+                            class="border-t border-gray-100/80 p-4 dark:border-white/10"
+                            :class="
+                                viewMode === 'card'
+                                    ? 'grid grid-cols-1 gap-4 md:grid-cols-2'
+                                    : 'space-y-3'
+                            "
                         >
                             <div
                                 v-for="(subscription, index) in group.items"
@@ -605,6 +670,7 @@
                             >
                                 <Card
                                     :misub="subscription"
+                                    :view-mode="viewMode"
                                     @delete="handleDelete(subscription.id)"
                                     @change="handleSortEnd"
                                     @update="handleUpdate(subscription.id)"
@@ -621,7 +687,9 @@
                 </template>
                 <div
                     v-if="ungroupedSubscriptions.length > 0"
-                    class="grid grid-cols-1 gap-4 md:grid-cols-2"
+                    :class="
+                        viewMode === 'card' ? 'grid grid-cols-1 gap-4 md:grid-cols-2' : 'space-y-3'
+                    "
                 >
                     <div
                         v-for="(subscription, index) in ungroupedSubscriptions"
@@ -631,6 +699,7 @@
                     >
                         <Card
                             :misub="subscription"
+                            :view-mode="viewMode"
                             @delete="handleDelete(subscription.id)"
                             @change="handleSortEnd"
                             @update="handleUpdate(subscription.id)"
@@ -644,7 +713,10 @@
                     </div>
                 </div>
             </template>
-            <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div
+                v-else
+                :class="viewMode === 'card' ? 'grid grid-cols-1 gap-4 md:grid-cols-2' : 'space-y-3'"
+            >
                 <div
                     v-for="(subscription, index) in paginatedSubscriptions"
                     :key="subscription.id"
@@ -653,6 +725,7 @@
                 >
                     <Card
                         :misub="subscription"
+                        :view-mode="viewMode"
                         @delete="handleDelete(subscription.id)"
                         @change="handleSortEnd"
                         @update="handleUpdate(subscription.id)"

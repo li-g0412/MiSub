@@ -18,6 +18,7 @@
         resolveSubscriptionStatusFilter,
         matchesSubscriptionStatus,
     } from '../utils/dashboard-deeplink.js';
+    import { readRawPreference, writeRawPreference } from '../utils/local-preference.js';
 
     const dataStore = useDataStore();
     const { showToast } = useToastStore();
@@ -30,6 +31,14 @@
     // State
     const isSortingSubs = ref(false);
     const showDeleteSubsModal = ref(false);
+    const storedSubscriptionViewMode = readRawPreference('airportSubscriptionViewMode');
+    const subscriptionViewMode = ref(storedSubscriptionViewMode === 'list' ? 'list' : 'card');
+
+    const setSubscriptionViewMode = (mode) => {
+        if (mode !== 'card' && mode !== 'list') return;
+        subscriptionViewMode.value = mode;
+        writeRawPreference('airportSubscriptionViewMode', mode);
+    };
 
     const {
         subscriptions,
@@ -258,6 +267,7 @@
             :current-page="subsCurrentPage"
             :total-pages="subsTotalPages"
             :is-sorting="isSortingSubs"
+            :view-mode="subscriptionViewMode"
             searchable
             @clear-status-filter="clearStatusFilter"
             @add="handleAddSubscription"
@@ -267,6 +277,7 @@
             @refresh-all="batchUpdateAllSubscriptions"
             @edit="(id) => handleEditSubscription(subscriptions.find((s) => s.id === id))"
             @toggle-sort="isSortingSubs = !isSortingSubs"
+            @update:view-mode="setSubscriptionViewMode"
             @mark-dirty="markDirty"
             @delete-all="showDeleteSubsModal = true"
             @preview="handlePreviewSubscription"
