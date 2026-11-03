@@ -1,0 +1,16 @@
+# Only application build inputs enter the image. Exclude credentials and local state by default.
+**
+!Dockerfile
+!package.json
+!package-lock.json
+!index.html
+!vite.config.js
+!schema.sql
+!src/
+!src/**
+!functions/
+!functions/**
+!server/
+!server/**
+!public/
+!public/**
