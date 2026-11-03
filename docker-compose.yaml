@@ -16,4 +16,5 @@ services:
 volumes:
   misub-data:
     # 复用之前 docker run 创建的数据卷，避免 Compose 自动添加项目前缀。
+    external: true
     name: misub-data
